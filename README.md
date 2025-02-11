@@ -1,4 +1,4 @@
-# Eggcellent Timer
+# Eggcellent Timer 🍳⏲️
 
 Eggcellent Timer est une application mobile Flutter pour cuire des œufs à la perfection. Elle propose différents types de cuisson (œufs à la coque, œufs durs, œufs mollets, œufs pochés, etc.) avec un minuteur intégré et des conseils de cuisson pratiques.
 
@@ -23,6 +23,8 @@ Eggcellent Timer est une application mobile Flutter pour cuire des œufs à la p
     flutter pub get
     flutter run
    ```
-
 3. Enjoy 🍳
 
+## Screenshots
+
+![Simulator Screenshot - iPhone 15 Pro Max - 2025-02-11 at 22 49 53](https://github.com/user-attachments/assets/b2d938e1-3b60-4aaa-9c85-75c7574dd055)
