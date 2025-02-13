@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'screens/cooking_styles_screen.dart';
 
 void main() {
@@ -10,10 +11,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Eggcellent Timer',
-      home: CookingStylesScreen(),
+    return ScreenUtilInit(
+      designSize: const Size(375, 812), // Référence iPhone X (taille standard)
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Eggcellent Timer',
+          home: const CookingStylesScreen(),
+        );
+      },
     );
   }
 }
