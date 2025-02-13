@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class CookingStylesScreen extends StatefulWidget {
   const CookingStylesScreen({super.key});
@@ -77,7 +78,7 @@ class _CookingStylesScreenState extends State<CookingStylesScreen> {
           SmoothPageIndicator(
             controller: _pageController,
             count: eggStyles.length,
-            effect: WormEffect(
+            effect: const WormEffect(
                 dotColor: Colors.grey, activeDotColor: Colors.yellow),
           ),
           SizedBox(height: 40.h),
@@ -100,6 +101,8 @@ class _CookingCardState extends State<CookingCard> {
   Timer? _timer;
   bool _isRunning = false;
   bool _isPaused = false;
+  final AudioPlayer _audioPlayer =
+      AudioPlayer(); // Déclaration du lecteur audio
 
   void _startPauseTimer() {
     setState(() {
@@ -126,6 +129,8 @@ class _CookingCardState extends State<CookingCard> {
         });
       } else if (_remainingTime! <= 0) {
         timer.cancel();
+        _playAlarmSound();
+        _showTimeUpDialog();
         setState(() {
           _isRunning = false;
           _isPaused = false;
@@ -134,11 +139,99 @@ class _CookingCardState extends State<CookingCard> {
     });
   }
 
+  // Fonction pour jouer le son d'alarme
+  void _playAlarmSound() async {
+    await _audioPlayer
+        .setReleaseMode(ReleaseMode.loop); // Activation de la boucle
+    await _audioPlayer
+        .play(AssetSource('audio/alarm.mp3')); // Chemin du fichier audio
+  }
+
+  // Fonction pour afficher l'alerte lorsque le timer atteint 0
+  void _showTimeUpDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Temps écoulé !"),
+          content: const Text("Votre œuf est prêt !"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _audioPlayer.stop(); // Arrêter le son en fermant le dialogue
+                Navigator.of(context).pop();
+              },
+              child: const Text("OK", style: TextStyle(color: Colors.black)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String _formatTime(int? seconds) {
     if (seconds == null) return "";
     int minutes = seconds ~/ 60;
     int sec = seconds % 60;
     return "$minutes:${sec.toString().padLeft(2, '0')}";
+  }
+
+  void _showTipsDialog(BuildContext context) {
+    String tips;
+    switch (widget.eggStyle['name']) {
+      case 'Œufs à la coque':
+        tips = "1. N'oubliez pas de saler l'eau de cuisson.\n"
+            "2. Ajoutez un peu de vinaigre pour des œufs encore plus faciles à écaler.\n"
+            "3. Utilisez des œufs à température ambiante pour une cuisson plus homogène.";
+        break;
+      case 'Œufs mollets':
+        tips =
+            "1. Veillez à ne pas trop cuire les œufs pour un jaune crémeux.\n"
+            "2. N'oubliez pas de plonger vos œufs dans de l'eau froide après cuisson.";
+        break;
+      case 'Œufs durs':
+        tips =
+            "1. Faites cuire les œufs pendant 10 minutes pour obtenir des œufs durs parfaits.\n"
+            "2. Refroidissez-les dans de l'eau glacée pour arrêter la cuisson.";
+        break;
+      case 'Œufs pochés':
+        tips =
+            "1. Ajoutez du vinaigre à l'eau pour que le blanc se tienne mieux.\n"
+            "2. Cassez l'œuf dans un ramequin avant de le plonger dans l'eau chaude.";
+        break;
+      case 'Œufs au plat':
+        tips =
+            "1. Pour obtenir un jaune intact, faites chauffer doucement la poêle.\n"
+            "2. Utilisez une petite quantité d'huile pour un meilleur résultat.";
+        break;
+      case 'Œufs cocotte':
+        tips = "1. Préchauffez le four avant de cuire vos œufs cocotte.\n"
+            "2. Vous pouvez ajouter de la crème fraîche pour encore plus de crémeux.";
+        break;
+      default:
+        tips = "Pas de tips disponibles.";
+        break;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Tips du chef"),
+          content: Text(tips),
+          actions: <Widget>[
+            TextButton(
+              child:
+                  const Text("Fermer", style: TextStyle(color: Colors.black)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -208,11 +301,14 @@ class _CookingCardState extends State<CookingCard> {
                   ),
                   SizedBox(height: 30.h),
                   Center(
-                    child: Text(
-                      "Découvrez les tips du chef",
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
+                    child: InkWell(
+                      onTap: () => _showTipsDialog(context),
+                      child: Text(
+                        "Découvrez les tips du chef",
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
