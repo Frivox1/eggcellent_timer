@@ -1,0 +1,2 @@
+/Users/valerymertens/Developer/eggcellent_timer/android/app/.cxx/Debug/i5p5y1u3/arm64-v8a/CMakeFiles/rebuild_cache.dir
+/Users/valerymertens/Developer/eggcellent_timer/android/app/.cxx/Debug/i5p5y1u3/arm64-v8a/CMakeFiles/edit_cache.dir

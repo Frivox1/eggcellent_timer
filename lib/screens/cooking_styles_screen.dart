@@ -1,11 +1,18 @@
+// ignore_for_file: unused_field
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../l10n/app_localizations.dart';
+import 'langues.dart';
 
 class CookingStylesScreen extends StatefulWidget {
-  const CookingStylesScreen({super.key});
+  final Function(Locale) changeLanguage;
+
+  const CookingStylesScreen({super.key, required this.changeLanguage});
 
   @override
   _CookingStylesScreenState createState() => _CookingStylesScreenState();
@@ -13,41 +20,57 @@ class CookingStylesScreen extends StatefulWidget {
 
 class _CookingStylesScreenState extends State<CookingStylesScreen> {
   final PageController _pageController = PageController();
+  Locale _locale = const Locale('fr');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage();
+  }
+
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? langCode = prefs.getString('language_code');
+    setState(() {
+      _locale = langCode != null ? Locale(langCode) : const Locale('fr');
+    });
+  }
+
   final List<Map<String, dynamic>> eggStyles = [
     {
-      'name': 'Œufs à la coque',
+      'name': 'boiled_eggs',
       'duration': 3,
-      'result': 'Blanc à peine pris, jaune bien coulant',
+      'result': 'boiled_eggs_result',
       'imagePath': 'assets/images/cuisson-oeuf-coque.jpg'
     },
     {
-      'name': 'Œufs mollets',
+      'name': 'soft_boiled_eggs',
       'duration': 6,
-      'result': 'Blanc bien pris, jaune crémeux',
+      'result': 'soft_boiled_eggs_result',
       'imagePath': 'assets/images/cuisson-oeuf-mollet.jpg'
     },
     {
-      'name': 'Œufs durs',
+      'name': 'hard_boiled_eggs',
       'duration': 10,
-      'result': 'Blanc et jaune complètement cuits',
+      'result': 'hard_boiled_eggs_result',
       'imagePath': 'assets/images/cuisson-oeuf-dur.jpg'
     },
     {
-      'name': 'Œufs pochés',
+      'name': 'poached_eggs',
       'duration': 4,
-      'result': 'Blanc pris, jaune coulant',
+      'result': 'poached_eggs_result',
       'imagePath': 'assets/images/cuisson-oeuf-poche.jpg'
     },
     {
-      'name': 'Œufs au plat',
+      'name': 'fried_eggs',
       'duration': 4,
-      'result': 'Blanc pris, jaune coulant',
+      'result': 'fried_eggs_result',
       'imagePath': 'assets/images/cuisson-oeuf-au-plat.jpg'
     },
     {
-      'name': 'Œufs cocotte',
+      'name': 'baked_eggs',
       'duration': 7,
-      'result': 'Blanc pris, jaune coulant',
+      'result': 'baked_eggs_result',
       'imagePath': 'assets/images/cuisson-oeuf-cocotte.jpg'
     }
   ];
@@ -56,12 +79,24 @@ class _CookingStylesScreenState extends State<CookingStylesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Eggcellent Timer',
+        title: Text(AppLocalizations.of(context)!.translate('app_title'),
             style: TextStyle(
                 color: Colors.black,
-                fontSize: 22.sp,
+                fontSize: 26.sp,
                 fontWeight: FontWeight.bold)),
         backgroundColor: Colors.yellow,
+        leading: IconButton(
+          icon: Icon(Icons.settings, color: Colors.black, size: 30.0),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => LanguageSelectionPage(
+                        changeLanguage: widget.changeLanguage,
+                      )),
+            );
+          },
+        ),
       ),
       body: Column(
         children: [
@@ -101,8 +136,7 @@ class _CookingCardState extends State<CookingCard> {
   Timer? _timer;
   bool _isRunning = false;
   bool _isPaused = false;
-  final AudioPlayer _audioPlayer =
-      AudioPlayer(); // Déclaration du lecteur audio
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   void _startPauseTimer() {
     setState(() {
@@ -139,30 +173,28 @@ class _CookingCardState extends State<CookingCard> {
     });
   }
 
-  // Fonction pour jouer le son d'alarme
   void _playAlarmSound() async {
-    await _audioPlayer
-        .setReleaseMode(ReleaseMode.loop); // Activation de la boucle
-    await _audioPlayer
-        .play(AssetSource('audio/alarm.mp3')); // Chemin du fichier audio
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    await _audioPlayer.play(AssetSource('audio/alarm.mp3'));
   }
 
-  // Fonction pour afficher l'alerte lorsque le timer atteint 0
   void _showTimeUpDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Temps écoulé !"),
-          content: const Text("Votre œuf est prêt !"),
+          title: Text(AppLocalizations.of(context)!.translate("time_up")),
+          content: Text(
+              AppLocalizations.of(context)!.translate("your_egg_is_ready")),
           actions: [
             TextButton(
               onPressed: () {
-                _audioPlayer.stop(); // Arrêter le son en fermant le dialogue
+                _audioPlayer.stop();
                 Navigator.of(context).pop();
               },
-              child: const Text("OK", style: TextStyle(color: Colors.black)),
+              child: Text(AppLocalizations.of(context)!.translate("close"),
+                  style: const TextStyle(color: Colors.black)),
             ),
           ],
         );
@@ -180,37 +212,26 @@ class _CookingCardState extends State<CookingCard> {
   void _showTipsDialog(BuildContext context) {
     String tips;
     switch (widget.eggStyle['name']) {
-      case 'Œufs à la coque':
-        tips = "1. N'oubliez pas de saler l'eau de cuisson.\n"
-            "2. Ajoutez un peu de vinaigre pour des œufs encore plus faciles à écaler.\n"
-            "3. Utilisez des œufs à température ambiante pour une cuisson plus homogène.";
+      case 'boiled_eggs':
+        tips = AppLocalizations.of(context)!.translate('boiled_eggs_tips');
         break;
-      case 'Œufs mollets':
-        tips =
-            "1. Veillez à ne pas trop cuire les œufs pour un jaune crémeux.\n"
-            "2. N'oubliez pas de plonger vos œufs dans de l'eau froide après cuisson.";
+      case 'soft_boiled_eggs':
+        tips = AppLocalizations.of(context)!.translate('soft_boiled_eggs_tips');
         break;
-      case 'Œufs durs':
-        tips =
-            "1. Faites cuire les œufs pendant 10 minutes pour obtenir des œufs durs parfaits.\n"
-            "2. Refroidissez-les dans de l'eau glacée pour arrêter la cuisson.";
+      case 'hard_boiled_eggs':
+        tips = AppLocalizations.of(context)!.translate('hard_boiled_eggs_tips');
         break;
-      case 'Œufs pochés':
-        tips =
-            "1. Ajoutez du vinaigre à l'eau pour que le blanc se tienne mieux.\n"
-            "2. Cassez l'œuf dans un ramequin avant de le plonger dans l'eau chaude.";
+      case 'poached_eggs':
+        tips = AppLocalizations.of(context)!.translate('poached_eggs_tips');
         break;
-      case 'Œufs au plat':
-        tips =
-            "1. Pour obtenir un jaune intact, faites chauffer doucement la poêle.\n"
-            "2. Utilisez une petite quantité d'huile pour un meilleur résultat.";
+      case 'fried_eggs':
+        tips = AppLocalizations.of(context)!.translate('fried_eggs_tips');
         break;
-      case 'Œufs cocotte':
-        tips = "1. Préchauffez le four avant de cuire vos œufs cocotte.\n"
-            "2. Vous pouvez ajouter de la crème fraîche pour encore plus de crémeux.";
+      case 'baked_eggs':
+        tips = AppLocalizations.of(context)!.translate('baked_eggs_tips');
         break;
       default:
-        tips = "Pas de tips disponibles.";
+        tips = AppLocalizations.of(context)!.translate('no_tips_available');
         break;
     }
 
@@ -218,12 +239,12 @@ class _CookingCardState extends State<CookingCard> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Tips du chef"),
+          title: Text(AppLocalizations.of(context)!.translate("chef_tips")),
           content: Text(tips),
           actions: <Widget>[
             TextButton(
-              child:
-                  const Text("Fermer", style: TextStyle(color: Colors.black)),
+              child: Text(AppLocalizations.of(context)!.translate("close"),
+                  style: const TextStyle(color: Colors.black)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -263,14 +284,18 @@ class _CookingCardState extends State<CookingCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.eggStyle['name'],
+                  Text(
+                      AppLocalizations.of(context)!
+                          .translate(widget.eggStyle['name']),
                       style: TextStyle(
                           fontSize: 22.sp, fontWeight: FontWeight.bold)),
                   SizedBox(height: 10.h),
-                  Text('Durée : ${widget.eggStyle['duration']} minutes',
+                  Text(
+                      '${AppLocalizations.of(context)!.translate('duration')}: ${widget.eggStyle['duration']} ${AppLocalizations.of(context)!.translate('minutes')}',
                       style: TextStyle(fontSize: 18.sp)),
                   SizedBox(height: 10.h),
-                  Text('Résultat : ${widget.eggStyle['result']}',
+                  Text(
+                      '${AppLocalizations.of(context)!.translate('result')}: ${AppLocalizations.of(context)!.translate(widget.eggStyle['result'])}',
                       style: TextStyle(fontSize: 18.sp)),
                   SizedBox(height: 20.h),
                   Center(
@@ -292,7 +317,8 @@ class _CookingCardState extends State<CookingCard> {
                         ),
                         Text(
                             !_isRunning
-                                ? "Démarrer"
+                                ? AppLocalizations.of(context)!
+                                    .translate("start")
                                 : _formatTime(_remainingTime),
                             style: TextStyle(
                                 fontSize: 18.sp, fontWeight: FontWeight.bold)),
@@ -304,7 +330,8 @@ class _CookingCardState extends State<CookingCard> {
                     child: InkWell(
                       onTap: () => _showTipsDialog(context),
                       child: Text(
-                        "Découvrez les tips du chef",
+                        AppLocalizations.of(context)!
+                            .translate("discover_chef_tips"),
                         style: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.bold,
